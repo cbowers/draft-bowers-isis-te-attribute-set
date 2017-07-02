@@ -1,0 +1,319 @@
+<?xml version="1.0"?>
+<!DOCTYPE rfc SYSTEM "rfc2629.dtd">
+<?rfc comments="yes"?>
+<?rfc compact="yes"?>
+<?rfc inline="yes"?>
+<?rfc sortrefs="yes"?>
+<?rfc subcompact="no"?>
+<?rfc symrefs="yes"?>
+<?rfc toc="yes"?>
+<?rfc tocdepth="3"?>
+<?rfc tocindent="yes"?>
+<?rfc tocompact="yes"?>
+<rfc category="std" docName="draft-bowers-isis-te-attribute-set-00" ipr="trust200902" obsoletes="" updates="" submissionType="IETF" xml:lang="en">
+  <front>
+    <title abbrev="ISIS TE Attribute Sets">
+    Extensions to IS-IS to Associate TE Attributes with TE Attribute Sets
+    </title>
+
+    <author fullname="Chris Bowers" initials="C." surname="Bowers">
+      <organization>Juniper Networks</organization>
+      <address>
+        <postal>
+          <street>1194 N. Mathilda Ave.</street>
+          <city>Sunnyvale</city>
+          <region>CA</region>
+          <code>94089</code>
+          <country>US</country>
+        </postal>
+        <email>cbowers@juniper.net</email>
+      </address>
+    </author>
+
+	<author initials="S." surname="Hegde" fullname="Shraddha Hegde">
+		<organization>Juniper Networks</organization>
+		<address>
+		<postal>
+			<street>Embassy Business Park</street>
+			<city>Bangalore</city>
+			<region>KA</region>
+			<code>560093</code>
+			<country>India</country>
+		</postal>
+		<email>shraddha@juniper.net</email>
+		</address>
+	</author>
+
+    <date day="2" month="July" year="2017"/>
+
+    <area>Routing</area>
+
+    <workgroup>ISIS Working Group</workgroup>
+
+<abstract>
+
+<t> Abstract text
+</t>
+
+</abstract>
+
+</front>
+
+<middle>
+
+<section title="Introduction">
+
+<t> IS-IS encodings allow traffic engineering (TE) attributes, such as 
+bandwidth, administrative groups, and SRLGs, to be associated with 
+different links in the network topology. Different applications use 
+these attributes to decide how traffic should be directed across the network.</t> 
+
+<t> It can be useful for different applications to use different sets of attributes 
+to decide how traffic is directed across the network.  Existing IS-IS encodings 
+only allow for one set of TE attributes to be associated with a given link.  This
+document specifies encodings that allow different sets of TE attributes to be 
+associated with a given link.</t>
+
+</section>
+
+<section title="Basic assumptions">
+<t> There are several different approaches that one could take to enable this.
+The approach taken by this document is based on the following assumptions about
+the use of this encoding.
+</t>
+
+<t>
+<list style="hanging">
+
+<t> The requirements of many current and future deployments of SR and 
+RSVP are satisfied using the existing encodings that support a single 
+set of TE attributes. The encodings described here allow the 
+advertisement of multiple sets of TE attributes. They do so in a way 
+that minimizes the burden, in terms of interoperability testing and 
+software upgrades, on deployments that do not need this advanced 
+fucntionality.</t> 
+
+<t> Future applications are difficult to predict, especially as some 
+network operators deploy their own customized, centralized controllers. 
+The encodings described here does not try to associate TE attributes 
+with particular applications. Instead, they allow TE attributes to be 
+organized into sets, using groupings that make most sense for the 
+network operator's particular use case. The network advertises these TE 
+attributes with the associated TE attribute set identifiers, and 
+different applications use this information as they see fit. The authors 
+believe that this approach provides the greatest flexibility for those 
+networks that are likely to need these advanced capabilities.</t> 
+
+</list>
+</t>
+
+
+</section>
+    
+
+    
+<section anchor="sec_te_attribute_set_id" title="TE Attribute Set Identifier">
+   
+<t> The new TE Attribute Set Identifier is a 32-bit value that identifies a 
+set of attributes. All of the attributes advertised with a given value 
+of the Attribute Set Identifier are considered to be part of the 
+attribute set. This allows different applications to use different 
+attribute sets, if desired. 
+</t>
+
+<t> The TE Attribute Set Identifier with a value of zero is special.  Existing 
+encodings for advertising attributes that do not explicitly support the
+inclusion of the TE Attribute Set Identifier are now understood to implicitly 
+advertise attributes with the TE Attribute Set Identifier set to zero.
+In this framework, existing implementations using the existing encodings 
+already support the advertisement of attributes with the TE Attribute Set
+Identifier = 0. 
+</t>
+
+<t> In order to ensure a consistent view of the attribute set scoped attributes,
+for encodings that explicitly support the TE Attribute Set Identifier, 
+advertising an attribute with TE Attribute Set Identifier set to 
+zero is not allowed.
+</t>
+
+<t> From a standardization perspective, there is not intended to be any 
+fixed mapping between a given TE Attribute Set Identifier and a given 
+application. A network operator wishing to advertise different attribute 
+sets could configure the network equipment to advertise attributes with 
+different values of the TE Attribute Set Identifier based on their 
+objectives. The different applications (be they controller-based 
+applications or distributed applications) would make use of the 
+different attribute sets based on convention within that network. 
+</t>
+      
+</section>
+    
+<section anchor="sec_link_attribute_set_sub_tlv" title="Link Attribute Set sub-TLV">
+
+<t> The Link Attribute Set sub-TLV is a new sub-TLV for TLVs 22, 23, 141, 
+222, and 223. It allows different sets of link attributes to be 
+advertised for the same link. This allows different applications to use 
+different sets of attributes. 
+</t>
+
+<t>
+<list style="hanging">
+<t hangText="Type:">To be assigned by IANA (suggested value 101)</t>
+
+<t hangText="Length:">Number of octets in the value field (1 octet)</t>
+
+<t hangText="Value:">
+
+	<list style="hanging">
+	
+	<t hangText="TE Attribute Set Identifier:"> A 32-bit value containing the non-zero 
+		TE Attribute Set Identifier that identifies a set of attributes. The Link 
+		Attribute Set sub-TLV MUST be ignored if the TE Attribute Set Identifier is 
+		zero. This ensures a consistent view of the attribute set scoped link 
+		attributes, where the Link Attribute sub-TLVs advertised directly 
+		in TLV#22 are now understood to be implicitly advertised with the
+		TE Attribute Set Identifier equal to zero. </t>
+
+	<t hangText="Link Attribute sub-sub-TLVs:"> The format of these Link Attribute 
+		sub-sub-TLVs matches the existing formats for the Link Attribute 
+		sub-TLVs defined in <xref target="RFC5305"/> and <xref target="RFC7810"/>.
+		Each Link Attribute sub-sub-TLV advertised in a given Link Attribute Set sub-TLV is 
+		associated with the TE Attribute Set Identifier in the Link Attribute Set 
+		sub-TLV. </t>
+
+	</list>
+
+ </t>
+
+
+</list>
+</t>
+      
+
+ 
+</section>
+    
+
+<section anchor="sec_attribute_set_scoped_srlg_tlv" title="TE Attribute Set Scoped SRLG TLV">
+
+<t> A new TLV is defined to allow SRLGs to be advertised for a given link 
+and associated with a specific attribute set identifier. Although 
+similar in functionality to TLV 138 (defined by <xref 
+target="RFC5307"/>) and TLV 139 (defined by <xref target="RFC6119"/>), 
+a single TLV provides support for IPv4, IPv6, and unnumbered identifiers 
+for a link. Unlike TLVs 138/139 it utilizes sub-TLVs to encode the link 
+identifiers in order to provide the flexible formatting required to 
+support multiple link identifier types. 
+</t>
+
+<t>
+<list style="hanging">
+<t hangText="Type:">To be assigned by IANA (suggested value 238)</t>
+
+<t hangText="Length:">Number of octets in the value field (1 octet)</t>
+
+<t hangText="Value:">
+
+	<list style="hanging">
+	
+	<t hangText="Neighbor System-ID + pseudo-node ID (7 octets)"> </t>
+
+	<t hangText="TE Attribute Set Identifier:"> A 32-bit value containing the non-zero 
+		TE Attribute Set Identifier that identifies a set of attributes. The 
+		TE Attribute Set Scoped SRLG TLV MUST be ignored if the TE Attribute Set Identifier is 
+		zero. This ensures a consistent view of the attribute set scoped link 
+		attributes, where the SRLGs advertised directly in TLV#138 and TLV#139
+		are now understood to be implicitly advertised with the
+		TE Attribute Set Identifier equal to zero.</t>
+
+	<t hangText="Length of sub-TLVs in octets (1 octet)"> </t>
+	<t hangText="Link Identifier sub-TLVs (variable)"> </t>
+	<t hangText="0 or more SRLG Values (Each value is 4 octets)"> </t>
+
+	</list>
+
+ </t>
+ 
+ <t>
+The following Link Identifier sub-TLVs are defined. The type
+values are suggested and will be assigned by IANA - but as
+the formats are identical to existing sub-TLVs defined for
+TLVs 22, 23, 141, 222, and 223 the use of the suggested sub-TLV
+types is strongly encouraged.
+</t>
+
+</list>
+</t>
+     
+<t>
+At least one set of link identifiers (IPv4, IPv6, or unnumbered) MUST
+be present.  TLVs which do not meet this requirement MUST be ignored.
+</t>	 
+
+<t>
+Multiple TLVs for the same link MAY be advertised.
+</t>
+ 
+</section>
+    
+<section anchor="IANA" title="IANA Considerations">
+<t>IANA is requested to create a new sub-TLV, the Link Attribute 
+Set sub-TLV for TLVs 22, 23, 141, 222, and 223.</t>
+	  
+<figure>
+<artwork align="left"><![CDATA[
+Type     Description                 22 23 141 222 223 Ref.
+-------  --------------------------- -- -- --- --- --- -------
+TBA1     Link Attribute Set sub-TLV  y  y   y   y   y  [This
+                                                        draft]
+]]></artwork>
+</figure> 
+
+<t>IANA is requested to create a new TLV, the TE Attribute Set 
+Scoped SRLG TLV.</t>
+	  
+<figure>
+<artwork align="left"><![CDATA[
+Type     Description             IIH SNP LSP Purge Ref.
+-------  ----------------------- --- --- --- ----- ------
+TBA2     TE Attribute Set Scoped  n   n   y    n   [This
+         SRLG TLV                                  draft]
+]]></artwork>
+</figure> 
+
+</section>
+    
+    <section title="Management Considerations">
+      <t>TBD
+      </t>
+    </section>
+
+    <section title="Security Considerations">
+      <t> TBD
+      </t>
+    </section>
+
+    <section anchor="Acknowledgements" title="Acknowledgements" toc="default">
+	  <t> The basic format for the encoding of the Link Attribute Set sub-TLV and the 
+		TE Attribute Set Scoped SRLG TLV follows the basic format of the encodings in 
+		<xref target="I-D.ginsberg-isis-te-app"/>.
+      </t>
+    </section>
+
+  </middle>
+
+  <back>
+  
+    <references title="Normative References">
+      <?rfc include="http://xml.resource.org/public/rfc/bibxml/reference.RFC.5305.xml"?>
+      <?rfc include="http://xml.resource.org/public/rfc/bibxml/reference.RFC.5307.xml"?>
+	  <?rfc include="http://xml.resource.org/public/rfc/bibxml/reference.RFC.6119.xml"?>
+      <?rfc include="http://xml.resource.org/public/rfc/bibxml/reference.RFC.7810.xml"?>
+    </references>
+	
+	 <references title="Informative References">
+      <?rfc include="http://xml.resource.org/public/rfc/bibxml3/reference.I-D.draft-ginsberg-isis-te-app-00.xml"?>
+    </references>
+      
+  </back>
+</rfc>
