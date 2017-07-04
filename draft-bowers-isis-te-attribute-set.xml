@@ -45,7 +45,7 @@
 		</address>
 	</author>
 
-    <date day="2" month="July" year="2017"/>
+    <date day="3" month="July" year="2017"/>
 
     <area>Routing</area>
 
@@ -94,12 +94,12 @@ RSVP can be satisfied using the existing encodings that support a single
 set of TE attributes and SRLGs. The encodings described here allow the 
 advertisement of multiple sets of TE attributes and SRLGs. They do so in a way 
 that minimizes the disruption and burden, in terms of interoperability 
-testing and software upgrades and overall complexity, on deployments that
+testing, software upgrades, and overall complexity, on deployments that
 do not need this more complex fucntionality.</t>
 </section>
 
 <section title="Maximize flexibilty">
-<t> Future applications are difficult to predict, especially as some 
+<t> Future applications are difficult to predict, especially as 
 network operators deploy their own customized, centralized controllers. 
 The encodings described here does not try to associate TE attributes and 
 SRLGs with particular applications. Instead, they allow TE attributes 
@@ -115,10 +115,10 @@ require these more complex capabilities.</t>
 
 </section>
     
-<section anchor="sec_te_attribute_set_id" title="TE link attributes that would benefit from this new functionality">
+<section anchor="sec_te_attribute_set_id" title="TE Link Attributes that would benefit from this new functionality">
 
 <t> There are currently 36 sub-TLVs defined for TLV#22 (as well as
-23, 141, 222, and 223.)  We draw a distinction between two types of sub-TLVs 
+TLVs #23, #141, #222, and #223.)  We draw a distinction between two types of sub-TLVs 
 in TLV#22.  Some sub-TLVs (such as the IPv4 interface address and neighbor address 
 sub-TLVs) are used to identify a link.  In this document, we refer to these as
 TE link identifier sub-TLVs.  Below is a complete list of the sub-TLVs in TLV#22 that
@@ -216,7 +216,8 @@ advertised for the same link, scoped by the TE Attribute Set ID.
 		Each Link Attribute sub-sub-TLV advertised in a given Link Attribute Set sub-TLV is 
 		associated with the TE Attribute Set Identifier in the Link Attribute Set 
 		sub-TLV.  <xref target="fig_te_link_attribute_sub_tlvs_specified"/>
-		shows the subset of existing Link Attributes sub-TLVs that we are specifying here.</t>
+		shows the subset of existing Link Attributes sub-TLVs that we are specifying 
+		in this document.</t>
 
 	</list>
 
@@ -228,24 +229,34 @@ advertised for the same link, scoped by the TE Attribute Set ID.
  
 </section>
    
-<section anchor="sec_te_attribute_set_usage" title="TE attribute set identifier usage">
+<section anchor="sec_te_attribute_set_usage" title="TE Attribute Set usage">
+
+<t> The TE attribute set uses a simple substitution semantics.  We consider the 
+TE attribute set with identifier=0 to be the default TE attribute set.
+An application receiving attributes in the default TE attribute set will use
+those default TE attributes, unless it receives attributes in the one non-default
+TE attribute set that it has been configured or programmed to consider.
+</t>
+
 <t> In many network scenarios, all of the applications will only need to 
 use a single common set of TE attributes advertised with their existing encodings.
-In this framework, these applications will all be using TE attribute set = 0. </t>
+In this framework, these applications will all be using TE attribute set = 0, the 
+default TE attribute set. </t>
 
 <figure title="Scenario where all applications use a single common set of TE attributes">
 <artwork align="left" ><![CDATA[
 Application     Atribute set id               
------------     -----------------------------
-A				0 (implicit)
-B				0 (implicit)
-C				0 (implicit)
+-----------     ---------------
+A                 0 (implicit)
+B                 0 (implicit)
+C                 0 (implicit)
 ]]></artwork>
 </figure> 
 
 <t> In some scenarios, a network operator will need to advertise different 
 values of a given attribute for a given link. Consider a scenario where 
-applications D and E need common values for all TE link attributes, except for sub-TLV#9(Maximum link 
+applications D, E, and F need common values for all TE link attributes, 
+except for sub-TLV#9 (Maximum link 
 bandwidth).  Applications D and E use a common value for sub-TLV#9,  
 while application F needs a different value for sub-TLV#9. 
 This scenario is supported by having each link advertise all sub-TLVs 
@@ -256,17 +267,17 @@ sub-sub-TLV#9 in the TE Atribute Set sub-TLV with TE attribute set id = 1.
 Application F is configured to use attribute set id = 1. This means that application
 F first looks for the value of each attribute scoped for TE attribute set = 1.
 If it is present, application F uses that attribute set scoped value.
-If it is not present, application F uses the value for that attribute implicitly
-scoped for TE attribute set = 0.
+If it is not present, application F uses the value in the default TE attribute set
+(id=0).
  </t>
 
  <figure title="Scenario where applications need different values for some attributes">
 <artwork align="left" ><![CDATA[
 Application     Atribute set id               
------------     -----------------------------
-D				0 (implicit)
-E				0 (implicit)
-F				1
+-----------     ---------------
+D                 0 (implicit)
+E                 0 (implicit)
+F                 1
 ]]></artwork>
 </figure> 
 
@@ -357,7 +368,7 @@ Multiple TLVs for the same link MAY be advertised.
  
 </section>
     
-<section anchor="sec_srlg_set_usage" title="SRLG Set Identifier usage">	
+<section anchor="sec_srlg_set_usage" title="SRLG Set usage">	
 
 <t> The new SRLG Set Identifier is a 32-bit value that identifies a 
 set of SRLGs. The SRLG Set Identifier with a value of zero is special.
@@ -372,18 +383,79 @@ for encodings that explicitly support the SRLG Set Identifier,
 advertising an attribute with SRLG Set Identifier set to 
 zero is not allowed.</t>
 
-<t> The semantics of </t>
-
-
-<t>
-Note that the semantics of SRLGs is different from that of TE link attributes.  As far as
-a given application is concerned, a given TE link attribute should have only
-a single value.  This is not the case with SRLGs.  It makes sense for a given 
-application to consider a link as belonging to mulitple SRLGs.  
+<t> The SRLG set uses additive semantics. An application receiving SRLGs 
+scoped with different SRLG set identifiers will take the union of the 
+SRLGs in each SRLG set that the application is programmed to take into 
+consideration. Given the additive semantics of SRLG sets, we do not  
+use the SRLGs with SRLG set identifier = 0 as a default 
+value in the absence of other SRLGs with non-zero SRLG set identifier.
 </t>
-	
-	
-	
+
+<t> The following example illustrates the expected use of the 
+advertising SRLGs scoped with SRLG set identifiers.  SRLGs in networks often
+follow a natural grouping into sets.  As a concrete example, assume that 
+one set of SRLGs corresponds to links within a metro area (intra-city SRLGs).
+A second set of SRLGs corresponds to links between metro area (inter-city SRLGs).
+A third set of SRLGs corresponds to links between continents on undersea cables
+(inter-continental SRLGs).  A reasonable mapping of these natural SRLG groupings
+to SRLG set identifier is shown below in <xref target="fig_natural_mapping_of_srlgs"/>.
+The network would be configured to advertise SRLGs scoped with these SRLG set identifiers.</t>
+
+ <figure anchor="fig_natural_mapping_of_srlgs" 
+ title="Example mapping of natural SRLG groupings to SRLG set identifier">
+<artwork align="left" ><![CDATA[
+Natural SRLG groupings     SRLG set id               
+-----------------------    -----------
+intra-city SRLGs               1		 		 
+inter-city SRLGs               2
+inter-continental SRLGs        3
+]]></artwork>
+</figure> 
+
+<t> Assume that the network operator starts out with two applications.  
+Application G should take into account all three groups of SRLGs as path
+constraints: intra-city, inter-city, and inter-continental SRLGs.  Instead,
+application H should only take into account inter-city and inter-continental SRLGs. 
+This can be accomplished by having application G use union of SRLG sets 1, 2, and 3, 
+while application H uses the union of SRLG sets 2 and 3, as shown in 
+<xref target="fig_application_to_srlg_set_id_mapping1"/>.
+ 
+</t>
+
+<figure anchor="fig_application_to_srlg_set_id_mapping1" 
+ title="Example usage of SRLG sets by applications">
+<artwork align="left" ><![CDATA[
+Application                SRLG set ids               
+-----------------------    ------------
+     G                        1+2+3	 		 
+     H                        2+3
+]]></artwork>
+</figure> 
+
+<t> This accomplishes the goals of the network operator in a very natural way.</t>
+
+<t> Now suppose that the network operator introduces a third application, application J,  that
+should only take into account intra-city and inter-city SRLGs.  This can be accomplished 
+without modifying any of the SRLG advertisements.  The new application J need only be programmed
+or configured to take use the union of SRLG sets 1 and 2, as  as shown in 
+<xref target="fig_application_to_srlg_set_id_mapping2"/>.
+</t>
+
+<figure anchor="fig_application_to_srlg_set_id_mapping2" 
+ title="The simplicity of adding a new application">
+<artwork align="left" ><![CDATA[
+Application                SRLG set ids               
+-----------------------    ------------
+     G                        1+2+3	 		 
+     H                        2+3
+     J                        1+2
+]]></artwork>
+</figure> 
+
+<t> If application J is a centralized controller-based application, the new 
+application can be introduced with even touching the network itself.
+</t>
+
 </section>
 	
 <section anchor="IANA" title="IANA Considerations">
@@ -399,7 +471,7 @@ TBA1     Link Attribute Set sub-TLV  y  y   y   y   y  [This
 ]]></artwork>
 </figure> 
 
-<t>IANA is requested to create a new TLV, the TE Attribute Set 
+<t>IANA is requested to create a new TLV, the SRLG Set 
 Scoped SRLG TLV.</t>
 	  
 <figure>
